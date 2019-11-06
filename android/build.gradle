@@ -95,8 +95,15 @@ afterEvaluate { project ->
 
     android.libraryVariants.all { variant ->
         def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
-            from variant.javaCompile.destinationDir
+        // support all gradle versions
+        if(variant.hasProperty('javaCompileProvider')) {
+            task "jar${name}"(type: Jar, dependsOn: variant.javaCompileProvider) {
+                from variant.javaCompileProvider.get().destinationDir
+            }
+        } else {
+            task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
+                from variant.javaCompile.destinationDir
+            }
         }
     }
 
