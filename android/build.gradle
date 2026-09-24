@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 
 buildscript {
     repositories {
@@ -45,7 +46,7 @@ dependencies {
 }
 
 def configureReactNativePom(def pom) {
-    def packageJson = new groovy.json.JsonSlurper().parseText(file('../package.json').text)
+    def packageJson = new JsonSlurper().parseText(file('../package.json').text)
 
     pom.project {
         name packageJson.title
@@ -94,8 +95,15 @@ afterEvaluate { project ->
 
     android.libraryVariants.all { variant ->
         def name = variant.name.capitalize()
-        task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
-            from variant.javaCompile.destinationDir
+        // support all gradle versions
+        if(variant.hasProperty('javaCompileProvider')) {
+            task "jar${name}"(type: Jar, dependsOn: variant.javaCompileProvider) {
+                from variant.javaCompileProvider.get().destinationDir
+            }
+        } else {
+            task "jar${name}"(type: Jar, dependsOn: variant.javaCompile) {
+                from variant.javaCompile.destinationDir
+            }
         }
     }
 
